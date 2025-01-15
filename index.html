@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
 </head>
+
 <body class="bg-gray-50">
     <div class="container mx-auto p-8 max-w-5xl">
         <!-- Header Section -->
@@ -100,49 +101,12 @@
         </div>
         <div class="terms">
             <h4 class="font-bold">Terms:</h4>
-            <p>Please pay through our bank account - EQUITY BANK UGANDA Main Branch, ACCOUNT NAME: COGNOSPHERE <br>DYNAMICS LIMITED, Account Number: 1001203186634</p>
+            <p>Please pay through our bank account - EQUITY BANK UGANDA Main Branch, ACCOUNT NAME: COGNOSPHERE
+                <br>DYNAMICS LIMITED, Account Number: 1001203186634</p>
         </div>
     </div>
-
-    
-
-    <script>
-        let items = [];
-
-        function addItem() {
-            const table = document.getElementById('itemsTable');
-            const row = table.insertRow();
-            row.innerHTML = `
-                <td><input type="text" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
-                <td><input type="number" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
-                <td><input type="number" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
-                <td class="p-2"></td>
-            `;
-            items.push({ quantity: 0, rate: 0 });
-            calculateTotals();
-        }
-
-        function calculateTotals() {
-            const rows = document.getElementById('itemsTable').rows;
-            let subtotal = 0;
-
-            for (let i = 0; i < rows.length; i++) {
-                const quantity = parseFloat(rows[i].cells[1].querySelector('input').value) || 0;
-                const rate = parseFloat(rows[i].cells[2].querySelector('input').value) || 0;
-                const amount = quantity * rate;
-                rows[i].cells[3].textContent = amount.toFixed(2);
-                subtotal += amount;
-            }
-
-            const tax = subtotal * 0.06; // 6% tax rate
-            const total = subtotal + tax;
-
-            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-            document.getElementById('tax').textContent = tax.toFixed(2);
-            document.getElementById('total').textContent = total.toFixed(2);
-        }
-    </script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
