@@ -1,3 +1,17 @@
+async function saveInvoice(pdfBlob) {
+    const formData = new FormData();
+    formData.append('pdf', pdfBlob);
+    formData.append('date', document.querySelector('input[type="date"]').value);
+
+    const response = await fetch('/api/saveInvoice.php', {
+        method: 'POST',
+        body: formData
+    });
+    
+    const data = await response.json();
+    return data.invoiceNumber;
+}
+
 // Initialize items array
 let items = [];
 
@@ -44,6 +58,7 @@ function generateInvoiceNumber() {
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `INV-${year}${month}-${random}`;
 }
+
 
 // Initialize PDF generation when page loads
 window.onload = function() {
