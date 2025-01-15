@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto p-8 max-w-5xl">
+        <!-- Header Section -->
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-4">
+                <img src="logo.png" alt="Logo" class="w-60">
+                <h1 class="text-3xl font-bold text-gray-800 text-center">INVOICE</h1>
+            </div>
+            <div class="flex flex-col items-end">
+                <select class="p-2 border rounded-md mb-2">
+                    <option>EUR (€)</option>
+                    <option>USD ($)</option>
+                    <option>UGX</option>
+                </select>
+                <button class="bg-green-500 text-white px-4 py-2 rounded-md" id="download">Download</button>
+            </div>
+        </div>
+
+        <!-- Company Details -->
+        <div class="grid grid-cols-2 gap-8 mb-8">
+            <div>
+                <h4 class="font-bold mb-2">Cognosphere Dynamics Ltd</h4>
+                <p>Plot 19-21 Port Bell Road</p>
+                <p>P. O. Box 201025, Nakawa Kampala</p>
+                <p>Email: sales@cognospheredynamics.com</p>
+
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Date</label>
+                    <input type="date" class="w-full p-2 border rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Payment Terms</label>
+                    <input type="text" class="w-full p-2 border rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Due Date</label>
+                    <input type="date" class="w-full p-2 border rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">PO Number</label>
+                    <input type="text" class="w-full p-2 border rounded-md">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bill To / Ship To -->
+        <div class="grid grid-cols-2 gap-8 mb-8">
+            <div>
+                <h2 class="font-bold mb-2">Bill To</h2>
+                <textarea class="w-full p-2 border rounded-md" rows="4"></textarea>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="mb-8">
+            <table class="w-full mb-4">
+                <thead>
+                    <tr class="bg-gray-500">
+                        <th class="text-left p-2">Item</th>
+                        <th class="text-left p-2">Quantity</th>
+                        <th class="text-left p-2">Rate</th>
+                        <th class="text-left p-2">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTable">
+                    <!-- Items will be added here -->
+                </tbody>
+            </table>
+            <button onclick="addItem()" class="bg-blue-500 text-white px-4 py-2 rounded-md">+ Line Item</button>
+        </div>
+
+        <!-- Totals -->
+        <div class="flex justify-end">
+            <div class="w-64">
+                <div class="flex justify-between mb-2">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span>Withholding Tax(6%):</span>
+                    <span id="tax">$0.00</span>
+                </div>
+                <div class="flex justify-between font-bold">
+                    <span>Total:</span>
+                    <span id="total">$0.00</span>
+                </div>
+            </div>
+        </div>
+        <div class="terms">
+            <h4 class="font-bold">Terms:</h4>
+            <p>Please pay through our bank account - EQUITY BANK UGANDA Main Branch, ACCOUNT NAME: COGNOSPHERE <br>DYNAMICS LIMITED, Account Number: 1001203186634</p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        let items = [];
+
+        function addItem() {
+            const table = document.getElementById('itemsTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
+                <td><input type="number" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
+                <td><input type="number" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
+                <td class="p-2"></td>
+            `;
+            items.push({ quantity: 0, rate: 0 });
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const rows = document.getElementById('itemsTable').rows;
+            let subtotal = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const quantity = parseFloat(rows[i].cells[1].querySelector('input').value) || 0;
+                const rate = parseFloat(rows[i].cells[2].querySelector('input').value) || 0;
+                const amount = quantity * rate;
+                rows[i].cells[3].textContent = amount.toFixed(2);
+                subtotal += amount;
+            }
+
+            const tax = subtotal * 0.06; // 6% tax rate
+            const total = subtotal + tax;
+
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('tax').textContent = tax.toFixed(2);
+            document.getElementById('total').textContent = total.toFixed(2);
+        }
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>
