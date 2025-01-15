@@ -74,6 +74,8 @@ window.onload = function() {
         doc.text('Email: sales@cognospheredynamics.com', 10, 60);
 
         // Add invoice details
+        doc.setTextColor(128, 128, 128);
+
         doc.text(`Invoice Number: ${invoiceNumber}`, 150, 45, { align: 'right' });
         doc.text(`Date: ${date}`, 150, 50, { align: 'right' });
         doc.text(`Due Date: ${dueDate}`, 150, 55, { align: 'right' });
