@@ -51,12 +51,14 @@ function calculateTotals() {
 }
 
 // Function to generate invoice number
+let lastInvoiceNumber = 1000; // Initialize with the starting invoice number
 function generateInvoiceNumber() {
+    lastInvoiceNumber += 1;
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `INV-${year}${month}-${random}`;
+    return `INV-${year}${month}-${lastInvoiceNumber}`;
 }
 
 
@@ -75,7 +77,8 @@ window.onload = function() {
         const dueDate = document.querySelectorAll('input[type="date"]')[1].value;
         const poNumber = document.querySelectorAll('input[type="text"]')[1].value;
         const billTo = document.querySelectorAll('textarea')[0].value;
-        const invoiceNumber = generateInvoiceNumber();
+        
+        
 
         // Add header
         doc.setFontSize(20);
@@ -88,13 +91,27 @@ window.onload = function() {
         doc.text('P. O. Box 201025, Nakawa Kampala', 10, 55);
         doc.text('Email: sales@cognospheredynamics.com', 10, 60);
 
+        
         // Add invoice details
-        doc.setTextColor(128, 128, 128);
+       
+doc.setTextColor(100, 100, 100); // Use a lighter gray for static labels
 
-        doc.text(`Invoice Number: ${invoiceNumber}`, 150, 45, { align: 'right' });
-        doc.text(`Date: ${date}`, 150, 50, { align: 'right' });
-        doc.text(`Due Date: ${dueDate}`, 150, 55, { align: 'right' });
-        doc.text(`PO Number: ${poNumber}`, 150, 60, { align: 'right' });
+// Align labels (static text) on the right
+const pageWidth = doc.internal.pageSize.getWidth(); // Get the page width dynamically
+doc.text(`Invoice Number: ${invoiceNumber}`, 150, 45, { align: 'right' });
+doc.text('Date:', pageWidth - 50, 50, { align: 'right' });
+doc.text('Due Date:', pageWidth - 50, 55, { align: 'right' });
+doc.text('PO Number:', pageWidth - 50, 60, { align: 'right' });
+
+// Set text color for input values (dynamic text)
+doc.setTextColor(0, 0, 0); // Use black for darker dynamic values
+
+// Align input values (dynamic text) on the right
+doc.text(date, pageWidth - 10, 50, { align: 'right' });
+doc.text(dueDate, pageWidth - 10, 55, { align: 'right' });
+doc.text(poNumber, pageWidth - 10, 60, { align: 'right' });
+
+
 
         // Add billing info
         doc.text('Bill To:', 10, 80);
