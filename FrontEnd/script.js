@@ -7,7 +7,7 @@ async function saveInvoice(pdfBlob) {
         method: 'POST',
         body: formData
     });
-    
+
     const data = await response.json();
     return data.invoiceNumber;
 }
@@ -55,97 +55,136 @@ function generateInvoiceNumber() {
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `INV-${year}${month}-${random}`;
+    const random = Math.floor(Math.random() * 10).toString().padStart(3, '0');
+    return `${year}${month}-${random}`;
 }
 
+// Helper function to get table data
+function getTableData() {
+    const rows = document.getElementById('itemsTable').rows;
+    const data = [];
+    const currency = document.querySelector('select').value;
+
+    for (let row of rows) {
+        data.push([
+            row.cells[0].querySelector('input').value,
+            row.cells[1].querySelector('input').value,
+            `${currency} ${row.cells[2].querySelector('input').value}`,
+            `${currency} ${row.cells[3].textContent}`
+        ]);
+    }
+    return data;
+}
 
 // Initialize PDF generation when page loads
-window.onload = function() {
-    document.getElementById('download').addEventListener('click', function() {
+window.onload = function () {
+    document.getElementById('download').addEventListener('click', function () {
         const { jsPDF } = window.jspdf;
+
+        // Check if jsPDF is available
+        if (!jsPDF) {
+            console.error('jsPDF is not loaded');
+            alert('Error: PDF library not loaded');
+            return;
+        }
+
         const doc = new jsPDF();
+        const image = new Image();
 
-        //Company logo
-        doc.addImage('logo.png', 'PNG', 10, 10, 50, 20);
+        try {
+            // Company logo - wrapped in try/catch in case logo fails to load
+            const img = new Image();
+            img.onload = function () {
+                doc.addImage(this, 'PNG', 10, 10, 50, 50);
+                doc.save('invoice.pdf');
+            };
+            img.onerror = function () {
+                console.error('Error loading image');
+            };
+            img.src = './FrontEnd/images/logo.png';
 
-        // Get company details
-        const currency = document.querySelector('select').value;
-        const date = document.querySelector('input[type="date"]').value;
-        const dueDate = document.querySelectorAll('input[type="date"]')[1].value;
-        const poNumber = document.querySelectorAll('input[type="text"]')[1].value;
-        const billTo = document.querySelectorAll('textarea')[0].value;
-        const invoiceNumber = generateInvoiceNumber();
+            // Get invoice details
+            const currency = document.querySelector('select').value;
+            const date = document.querySelector('input[type="date"]').value;
+            const dueDate = document.querySelectorAll('input[type="date"]')[1].value;
+            const poNumber = document.querySelectorAll('input[type="text"]')[1].value;
+            const billTo = document.querySelectorAll('textarea')[0].value;
+            const invoiceNumber = generateInvoiceNumber();
 
-        // Add header
-        doc.setFontSize(20);
-        doc.text('INVOICE', 150, 20, { align: 'right' });
+            // Add "INVOICE" and invoice number
+            doc.setFontSize(28);
+            doc.text('INVOICE', 150, 30, { align: 'right' });
+            doc.setFontSize(11);
+            doc.text(`#${invoiceNumber}`, 150, 40, { align: 'right' });
 
-        // Add company info
-        doc.setFontSize(12);
-        doc.text('Cognosphere Dynamics Ltd', 10, 45);
-        doc.text('Plot 19-21 Port Bell Road', 10, 50);
-        doc.text('P. O. Box 201025, Nakawa Kampala', 10, 55);
-        doc.text('Email: sales@cognospheredynamics.com', 10, 60);
+            // Add company info - left aligned
+            doc.setFontSize(11);
+            doc.text('Cognosphere Dynamics Limited', 15, 70);
+            doc.text('Plot 19-21 Port Bell Road', 15, 77);
+            doc.text('P. O. Box 201025, Nakawa Kampala', 15, 84);
+            doc.text('Email: sales@cognospheredynamics.com', 15, 91);
 
-        // Add invoice details
-        doc.setTextColor(128, 128, 128);
+            // Add invoice details - right aligned
+            doc.setFontSize(11);
+            doc.text('Date:', 120, 70);
+            doc.text(date, 150, 70);
+            doc.text('Due Date:', 120, 76);
+            doc.text(dueDate, 150, 76);
+            doc.text('PO Number:', 120, 82);
+            doc.text(poNumber, 150, 82);
+            doc.text('Balance Due:', 120, 88);
+            doc.text(`${currency} ${document.getElementById('total').textContent}`, 150, 88);
 
-        doc.text(`Invoice Number: ${invoiceNumber}`, 150, 45, { align: 'right' });
-        doc.text(`Date: ${date}`, 150, 50, { align: 'right' });
-        doc.text(`Due Date: ${dueDate}`, 150, 55, { align: 'right' });
-        doc.text(`PO Number: ${poNumber}`, 150, 60, { align: 'right' });
+            // Add billing info
+            doc.setFontSize(11);
+            doc.text('Bill To:', 15, 120);
+            const billToLines = billTo.split('\n');
+            billToLines.forEach((line, index) => {
+                doc.text(line, 15, 130 + (index * 10));
+            });
 
-        // Add billing info
-        doc.text('Bill To:', 10, 80);
-        doc.text(billTo.split('\n'), 10, 85);
+            // Create items table with dark header
+            doc.autoTable({
+                startY: 160,
+                head: [['Item', 'Quantity', 'Rate', 'Amount']],
+                body: getTableData(),
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [51, 51, 51],
+                    textColor: [255, 255, 255],
+                    fontSize: 11
+                },
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 5
+                },
+                columnStyles: {
+                    0: { cellWidth: 80 },
+                    1: { cellWidth: 30, halign: 'right' },
+                    2: { cellWidth: 40, halign: 'right' },
+                    3: { cellWidth: 40, halign: 'right' }
+                }
+            });
+            // Add subtotal, tax, and total
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.text(`Subtotal: ${currency} ${document.getElementById('subtotal').textContent}`, 150, finalY, { align: 'right' });
+            doc.text(`Withholding Tax (6%): ${currency} ${document.getElementById('tax').textContent}`, 150, finalY + 5, { align: 'right' });
+            doc.text(`Total: ${currency} ${document.getElementById('total').textContent}`, 150, finalY + 10, { align: 'right' });
 
-        // Get items from table
-        const items = [];
-        const itemRows = document.getElementById('itemsTable').rows;
-        for (let row of itemRows) {
-            items.push([
-                row.cells[0].querySelector('input').value,
-                row.cells[1].querySelector('input').value,
-                row.cells[2].querySelector('input').value,
-                row.cells[3].textContent
-            ]);
+            // Add terms
+            doc.setFontSize(11);
+            doc.text('Terms:', 15, finalY + 40);
+            doc.setFontSize(10);
+            doc.text('Please pay through our bank account - EQUITY BANK UGANDA Main Branch,', 15, finalY + 50);
+            doc.text('ACCOUNT NAME: COGNOSPHERE DYNAMICS LIMITED', 15, finalY + 60);
+            doc.text('Account Number: 1001203186634', 15, finalY + 70);
+
+            // Save the PDF
+            doc.save(`Invoice-${invoiceNumber}.pdf`);
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Error generating PDF. Please check the console for details.');
         }
-
-        // Add items table
-        doc.autoTable({
-            startY: 110,
-            head: [['Item', 'Quantity', 'Rate', 'Amount']],
-            body: items,
-            theme: 'grid',
-            headStyles: {
-                fillColor: [128, 128, 128],
-                textColor: [255, 255, 255]
-            }
-        });
-
-        // Add totals
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.text(`Subtotal: ${currency} ${document.getElementById('subtotal').textContent}`, 150, finalY, { align: 'right' });
-        doc.text(`Withholding Tax (6%): ${currency} ${document.getElementById('tax').textContent}`, 150, finalY + 5, { align: 'right' });
-        doc.text(`Total: ${currency} ${document.getElementById('total').textContent}`, 150, finalY + 10, { align: 'right' });
-
-        // Add terms
-        doc.text('Terms:', 10, finalY + 20);
-        doc.setFontSize(10);
-        doc.text('Please pay through our bank account - EQUITY BANK UGANDA Main Branch,', 10, finalY + 25);
-        doc.text('ACCOUNT NAME: COGNOSPHERE DYNAMICS LIMITED', 10, finalY + 30);
-        doc.text('Account Number: 1001203186634', 10, finalY + 35);
-
-        // Add footer with page numbers
-        const pageCount = doc.internal.getNumberOfPages();
-        doc.setFontSize(8);
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
-        }
-
-        // Save the PDF
-        doc.save(`Invoice-${invoiceNumber}.pdf`);
     });
 };
