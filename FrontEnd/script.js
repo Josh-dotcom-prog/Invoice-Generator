@@ -184,7 +184,7 @@ window.onload = function () {
 
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('Error generating PDF. Please check the console for details.');
+        alert('Error generating PDF. Please check the console for details.');
         }
     });
 };
