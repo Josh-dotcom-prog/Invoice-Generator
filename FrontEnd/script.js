@@ -77,7 +77,7 @@ window.onload = function() {
         const dueDate = document.querySelectorAll('input[type="date"]')[1].value;
         const poNumber = document.querySelectorAll('input[type="text"]')[1].value;
         const billTo = document.querySelectorAll('textarea')[0].value;
-        
+        const lastInvoiceNumber = generateInvoiceNumber();
         
 
         // Add header
@@ -98,7 +98,7 @@ doc.setTextColor(100, 100, 100); // Use a lighter gray for static labels
 
 // Align labels (static text) on the right
 const pageWidth = doc.internal.pageSize.getWidth(); // Get the page width dynamically
-doc.text(`Invoice Number: ${invoiceNumber}`, 150, 45, { align: 'right' });
+doc.text(`Invoice Number: ${lastInvoiceNumber}`, 150, 45, { align: 'right' });
 doc.text('Date:', pageWidth - 50, 50, { align: 'right' });
 doc.text('Due Date:', pageWidth - 50, 55, { align: 'right' });
 doc.text('PO Number:', pageWidth - 50, 60, { align: 'right' });
@@ -163,6 +163,6 @@ doc.text(poNumber, pageWidth - 10, 60, { align: 'right' });
         }
 
         // Save the PDF
-        doc.save(`Invoice-${invoiceNumber}.pdf`);
+        doc.save(`Invoice-${lastInvoiceNumber}.pdf`);
     });
 };
