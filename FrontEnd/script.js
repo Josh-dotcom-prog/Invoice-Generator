@@ -47,6 +47,14 @@ function updateItem(index, field, value) {
     calculateTotals();
 }
 
+//Change currency 
+const exchangeRates = {
+    USD: 1,
+    EUR: 0.85,
+};
+
+
+
 // Function to calculate totals
 function calculateTotals() {
     const rows = document.getElementById('itemsTable').rows;
@@ -143,15 +151,20 @@ window.onload = function() {
             doc.text('Email: sales@cognospheredynamics.com', 15, 91);
 
             // Add invoice details
+            doc.setTextColor(49, 49, 49)
             doc.text('Date:', 120, 70);
+            doc.setFont(undefined, 'normal');
             doc.text(date, 150, 70);
             doc.text('Due Date:', 120, 76);
             doc.text(dueDate, 150, 76);
             doc.text('PO Number:', 120, 82);
             doc.text(poNumber, 150, 82);
+            doc.setFont(undefined, 'bold');
+            doc.setFillColor(230, 230, 230); // Light gray background - you can adjust RGB values
+            doc.rect(115, 84, 90, 7, 'F'); 
             doc.text('Balance Due:', 120, 88);
             doc.text(`${currency} ${document.getElementById('total').textContent}`, 150, 88);
-
+            doc.setFont(undefined, 'normal');
            
            
             // Add billing info
@@ -159,7 +172,7 @@ window.onload = function() {
             doc.text('Bill To:', 15, 120);
             const billToLines = billTo.split('\n');
             billToLines.forEach((line, index) => {
-                doc.text(line, 15, 130 + (index * 10));
+                doc.text(line, 15, 130 + (index * 6));
             });
 
             // Create items table
@@ -167,12 +180,12 @@ window.onload = function() {
                 startY: 160,
                 head: [['Item', 'Quantity', 'Rate', 'Amount']],
                 body: getTableData(),
-                theme: 'grid',
+                // theme: 'grid',
                 headStyles: {
                     fillColor: [51, 51, 51],
                     textColor: [255, 255, 255],
-                    fontSize: 11,
-                    cellPadding: 6,
+                    fontSize: 12,
+                    cellPadding: 2,
                     borderRadius: 20
                 },
                 styles: {
@@ -211,13 +224,17 @@ window.onload = function() {
             
             // Add totals
             const finalY = doc.lastAutoTable.finalY + 10;
-            doc.text(`Subtotal: ${currency} ${document.getElementById('subtotal').textContent}`, 150, finalY, { align: 'right' });
-            doc.text(`Withholding Tax (6%): ${currency} ${document.getElementById('tax').textContent}`, 150, finalY + 5, { align: 'right' });
-            doc.text(`Total: ${currency} ${document.getElementById('total').textContent}`, 150, finalY + 10, { align: 'right' });
+            doc.text(`Subtotal: ${currency} ${document.getElementById('subtotal').textContent}`, 180, finalY, { align: 'right' });
+            doc.text(`Withholding Tax (6%): ${currency} ${document.getElementById('tax').textContent}`, 180, finalY + 5, { align: 'right' });
+            doc.setFont(undefined, 'bold');
+            doc.text(`Total: ${currency} ${document.getElementById('total').textContent}`, 180, finalY + 10, { align: 'right' });
+            doc.setFont(undefined, 'normal');
 
             // Add terms
+            doc.setFont(undefined, 'bold');
             doc.setFontSize(11);
-            doc.text('Terms:', 15, finalY + 40);
+            doc.text('Terms:', 10, finalY + 40);
+            doc.setFont(undefined, 'normal');
             doc.setFontSize(10);
             doc.text('Please pay through our bank account - EQUITY BANK UGANDA Main Branch,', 15, finalY + 50);
             doc.text('ACCOUNT NAME: COGNOSPHERE DYNAMICS LIMITED', 15, finalY + 60);
