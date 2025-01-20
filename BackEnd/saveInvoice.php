@@ -1,5 +1,4 @@
 <?php
-require_once '../config/db.php';
 function getNextInvoiceNumber() {
     // Get last invoice number from database
     $query = "SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1";
