@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
 </head>
 
 <body class="bg-gray-50">
@@ -14,7 +14,7 @@
         <!-- Header Section -->
         <div class="flex justify-between items-center mb-8">
             <div class="flex items-center space-x-4">
-                <img src="logo.png" alt="Logo" class="w-60">
+                <img src="images/logo.png" alt="Logo" class="w-60">
                 <h1 class="text-3xl font-bold text-gray-800 text-center">INVOICE</h1>
             </div>
             <div class="flex flex-col items-end">
@@ -68,7 +68,7 @@
         <div class="mb-8">
             <table class="w-full mb-4">
                 <thead>
-                    <tr class="bg-gray-500">
+                    <tr class="bg-red-500 rounded">
                         <th class="text-left p-2">Item</th>
                         <th class="text-left p-2">Quantity</th>
                         <th class="text-left p-2">Rate</th>
@@ -87,15 +87,15 @@
             <div class="w-64">
                 <div class="flex justify-between mb-2">
                     <span>Subtotal:</span>
-                    <span id="subtotal">$0.00</span>
+                    <span id="subtotal">0.00</span>
                 </div>
                 <div class="flex justify-between mb-2">
                     <span>Withholding Tax(6%):</span>
-                    <span id="tax">$0.00</span>
+                    <span id="tax">0.00</span>
                 </div>
                 <div class="flex justify-between font-bold">
                     <span>Total:</span>
-                    <span id="total">$0.00</span>
+                    <span id="total">0.00</span>
                 </div>
             </div>
         </div>
