@@ -1,7 +1,7 @@
 <?php
 $host = 'localhost';
 $username = 'root';
-$password = '';
+$password = '020381';
 $database = 'invoicegeneratordb';
 
 try {

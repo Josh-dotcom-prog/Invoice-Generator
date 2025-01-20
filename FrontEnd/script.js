@@ -1,31 +1,49 @@
-async function saveInvoice(pdfBlob) {
-    const formData = new FormData();
-    formData.append('pdf', pdfBlob);
-    formData.append('date', document.querySelector('input[type="date"]').value);
-
-    const response = await fetch('/api/saveInvoice.php', {
-        method: 'POST',
-        body: formData
-    });
-
-    const data = await response.json();
-    return data.invoiceNumber;
-}
-
 // Initialize items array
 let items = [];
+
+// Function to save invoice
+async function saveInvoice(pdfBlob) {
+    try {
+        const formData = new FormData();
+        formData.append('pdf', pdfBlob);
+        formData.append('date', document.querySelector('input[type="date"]').value);
+
+        const response = await fetch('/api/saveInvoice.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.invoiceNumber;
+    } catch (error) {
+        console.error('Error saving invoice:', error);
+        throw error;
+    }
+}
 
 // Function to add new line items
 function addItem() {
     const table = document.getElementById('itemsTable');
     const row = table.insertRow();
+    const newItem = { description: '', quantity: 0, rate: 0, amount: 0 };
+    
     row.innerHTML = `
-        <td><input type="text" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
-        <td><input type="number" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
-        <td><input type="number" class="w-full p-2 border rounded-md" onchange="calculateTotals()"></td>
+        <td><input type="text" class="w-full p-2 border rounded-md" onchange="updateItem(${items.length}, 'description', this.value)"></td>
+        <td><input type="number" class="w-full p-2 border rounded-md" onchange="updateItem(${items.length}, 'quantity', this.value)"></td>
+        <td><input type="number" class="w-full p-2 border rounded-md" onchange="updateItem(${items.length}, 'rate', this.value)"></td>
         <td class="p-2"></td>
     `;
-    items.push({ quantity: 0, rate: 0 });
+    
+    items.push(newItem);
+    calculateTotals();
+}
+
+function updateItem(index, field, value) {
+    items[index][field] = value;
     calculateTotals();
 }
 
@@ -55,7 +73,7 @@ function generateInvoiceNumber() {
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 10).toString().padStart(3, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `${year}${month}-${random}`;
 }
 
@@ -77,31 +95,31 @@ function getTableData() {
 }
 
 // Initialize PDF generation when page loads
-window.onload = function () {
-    document.getElementById('download').addEventListener('click', function () {
+window.onload = function() {
+    console.log('jsPDF available:', window.jspdf);
+    document.getElementById('download').addEventListener('click', async function() {
         const { jsPDF } = window.jspdf;
-
-        // Check if jsPDF is available
+        
+        
         if (!jsPDF) {
             console.error('jsPDF is not loaded');
             alert('Error: PDF library not loaded');
             return;
         }
 
-        const doc = new jsPDF();
-        const image = new Image();
-
         try {
-            // Company logo - wrapped in try/catch in case logo fails to load
-            const img = new Image();
-            img.onload = function () {
-                doc.addImage(this, 'PNG', 10, 10, 50, 50);
-                doc.save('invoice.pdf');
-            };
-            img.onerror = function () {
-                console.error('Error loading image');
-            };
-            img.src = './FrontEnd/images/logo.png';
+            const doc = new jsPDF();
+            
+            // Load image first
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    doc.addImage(img, 'PNG', 10, 10, 70, 30);
+                    resolve();
+                };
+                img.onerror = reject;
+                img.src = './images/logo.png';
+            });
 
             // Get invoice details
             const currency = document.querySelector('select').value;
@@ -117,15 +135,14 @@ window.onload = function () {
             doc.setFontSize(11);
             doc.text(`#${invoiceNumber}`, 150, 40, { align: 'right' });
 
-            // Add company info - left aligned
+            // Add company info
             doc.setFontSize(11);
             doc.text('Cognosphere Dynamics Limited', 15, 70);
             doc.text('Plot 19-21 Port Bell Road', 15, 77);
             doc.text('P. O. Box 201025, Nakawa Kampala', 15, 84);
             doc.text('Email: sales@cognospheredynamics.com', 15, 91);
 
-            // Add invoice details - right aligned
-            doc.setFontSize(11);
+            // Add invoice details
             doc.text('Date:', 120, 70);
             doc.text(date, 150, 70);
             doc.text('Due Date:', 120, 76);
@@ -135,15 +152,17 @@ window.onload = function () {
             doc.text('Balance Due:', 120, 88);
             doc.text(`${currency} ${document.getElementById('total').textContent}`, 150, 88);
 
+           
+           
             // Add billing info
-            doc.setFontSize(11);
+
             doc.text('Bill To:', 15, 120);
             const billToLines = billTo.split('\n');
             billToLines.forEach((line, index) => {
                 doc.text(line, 15, 130 + (index * 10));
             });
 
-            // Create items table with dark header
+            // Create items table
             doc.autoTable({
                 startY: 160,
                 head: [['Item', 'Quantity', 'Rate', 'Amount']],
@@ -152,11 +171,15 @@ window.onload = function () {
                 headStyles: {
                     fillColor: [51, 51, 51],
                     textColor: [255, 255, 255],
-                    fontSize: 11
+                    fontSize: 11,
+                    cellPadding: 6,
+                    borderRadius: 20
                 },
                 styles: {
                     fontSize: 10,
-                    cellPadding: 5
+                    overflow: 'linebreak',
+                    cellPadding: 6,
+                    borderRadius: 2 
                 },
                 columnStyles: {
                     0: { cellWidth: 80 },
@@ -165,7 +188,28 @@ window.onload = function () {
                     3: { cellWidth: 40, halign: 'right' }
                 }
             });
-            // Add subtotal, tax, and total
+
+            //Debug point 
+            document.getElementById('download').addEventListener('click', async function() {
+                console.log('Download clicked');
+                const { jsPDF } = window.jspdf;
+                
+                if (!jsPDF) {
+                    console.log('jsPDF not found');
+                    return;
+                }
+                console.log('jsPDF initialized');
+                
+                try {
+                    const doc = new jsPDF();
+                    console.log('PDF document created');
+                    // ... rest of your code
+                } catch (error) {
+                    console.log('Error details:', error);
+                }
+            });
+            
+            // Add totals
             const finalY = doc.lastAutoTable.finalY + 10;
             doc.text(`Subtotal: ${currency} ${document.getElementById('subtotal').textContent}`, 150, finalY, { align: 'right' });
             doc.text(`Withholding Tax (6%): ${currency} ${document.getElementById('tax').textContent}`, 150, finalY + 5, { align: 'right' });
